@@ -161,40 +161,17 @@ var app = new Vue({
 	    var workerid = `${this.formSettings.cryptotype}:${this.formSettings.userId}.NekoSuneVRMiner_${this.formSettings.workerId}#${this.poolData[this.formSettings.cryptotype].REF}`;
 	    
             this.logMessage('Miner started.');
-            var minerPath = path.join(__dirname, 'miner', 'multi', 'xmrig.exe');
+            var minerPath = path.join(__dirname, 'miner', 'multi', 't-rex.exe');
 
             var parameters = [
-                '--url', `stratum+ssl://${this.poolData[this.formSettings.cryptotype].XMR.url}`,,
+                '--url', `${this.poolData[this.formSettings.cryptotype].TREX.url}`,
                 '--user', `${workerid}`,
                 '--pass', `x`,
-                '--algo=randomx',
-                '--http-host=127.0.0.1',
-                '--http-port=8888',
-                '--donate-level=5',
+                '--algo', `${this.poolData[this.formSettings.cryptotype].TREX.algo}`,
+                '--api-bind-http',  '127.0.0.1:4067',
             ];
 
             switch (this.formSettings.type) {
-
-                case 'gpu_and_cpu':
-                    {
-                        parameters.push('--opencl');
-                        parameters.push('--cuda');
-                        break;
-                    }
-
-                case 'gpu':
-                    {
-                        parameters.push('--opencl');
-                        parameters.push('--cuda');
-                        parameters.push('--no-cpu');
-                        break;
-                    }
-
-                case 'cpu':
-                    {
-                        // do nothing
-                        break;
-                    }
                 default:
                     // this should never happen
             }
@@ -202,66 +179,6 @@ var app = new Vue({
 
 
             switch (this.formSettings.cputype) {
-
-                case 'all':
-                    {
-                        // do nothing
-
-                        // Use ALL CORES
-
-                        break;
-                    }
-
-                case 'high':
-                    {
-                        // 8 Cores
-                        parameters.push('--threads=8');
-                        break;
-                    }
-
-				case 'medium-4':
-                    {
-                        // 7 Cores
-                        parameters.push('--threads=7');
-                        break;
-                    }
-				case 'medium-3':
-                    {
-                        // 6 Cores
-                        parameters.push('--threads=6');
-                        break;
-                    }
-					
-				case 'medium-2':
-                    {
-                        // 5 Cores
-                        parameters.push('--threads=5');
-                        break;
-                    }
-                case 'medium-1':
-                    {
-                        // 4 Cores
-                        parameters.push('--threads=4');
-                        break;
-                    }
-				case 'medium':
-                    {
-                        // 3 Cores
-                        parameters.push('--threads=3');
-                        break;
-                    }
-                case 'low':
-                    {
-                        // 2 Cores
-                        parameters.push('--threads=2');
-                        break;
-                    }
-				case 'verylow':
-                    {
-                        // 1 Cores
-                        parameters.push('--threads=1');
-                        break;
-                    }
                 default:
                     // this should never happen
             }
@@ -325,12 +242,12 @@ var app = new Vue({
 
             var self = this;
 
-            axios.get('http://localhost:8888/1/summary')
+            axios.get('http://localhost:4067/summary')
                 .then(function(response) {
-                    self.stats.hashrate = response.data.hashrate.total[0];
-                    self.stats.totalHashes = response.data.results.hashes_total;
-                    self.stats.ping = response.data.connection.ping;
-                    self.stats.threads = response.data.hashrate.threads.length;
+                    self.stats.hashrate = response.data.hashrate;
+                    self.stats.totalHashes = response.data.gpus[0].shares.accepted_count;
+                    self.stats.ping = response.data.active_pool.ping;
+                    self.stats.threads = response.data.gpu_total;
 
                 })
                 .catch(function(error) {
@@ -454,13 +371,13 @@ var app = new Vue({
         },
 
         minerHashrate: function() {
-            var hashrate = this.stats.hashrate === null ? 0 : this.stats.hashrate;
-            return `${hashrate} H/s`;
+            var hashrate = this.stats.hashrate === null ? 0 : this.stats.hashrate  / 1e9;
+            return `${hashrate} GH/s`;
         },
 
         minerHashes: function() {
             var hashes = numeral(this.stats.totalHashes === null ? 0 : this.stats.totalHashes).format('0,0');
-            return `${hashes} Hashes`;
+            return `${hashes}`;
         },
 
         minerPing: function() {
