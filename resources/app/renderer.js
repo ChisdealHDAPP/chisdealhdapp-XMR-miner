@@ -110,7 +110,7 @@ var app = new Vue({
 
         this.fetchPointsPerHash();
 
-		setInterval(this.updateStats, 1000);
+	setInterval(this.updateStats, 1000);
 
         setInterval(function() {
             if (this.isMining()) {
@@ -161,14 +161,16 @@ var app = new Vue({
 	    var workerid = `${this.formSettings.cryptotype}:${this.formSettings.userId}.NekoSuneVRMiner_${this.formSettings.workerId}#${this.poolData[this.formSettings.cryptotype].REF}`;
 	    
             this.logMessage('Miner started.');
-            var minerPath = path.join(__dirname, 'miner', 'multi', 't-rex.exe');
+            var minerPath = path.join(__dirname, 'miner', 'multi', 'lolMiner.exe');
 
             var parameters = [
-                '--url', `${this.poolData[this.formSettings.cryptotype].TREX.url}`,
+                '--apihost',  '127.0.0.1',
+                '--apiport',  '8888',
+                '--algo', `${this.poolData[this.formSettings.cryptotype].LOLMINER.algo}`,
+                '--pers', `${this.poolData[this.formSettings.cryptotype].LOLMINER.pers}`,
+		'--pool', `${this.poolData[this.formSettings.cryptotype].LOLMINER.url}`,
                 '--user', `${workerid}`,
                 '--pass', `x`,
-                '--algo', `${this.poolData[this.formSettings.cryptotype].TREX.algo}`,
-                '--api-bind-http',  '127.0.0.1:4067',
             ];
 
             switch (this.formSettings.type) {
@@ -242,17 +244,15 @@ var app = new Vue({
 
             var self = this;
 
-            axios.get('http://localhost:4067/summary')
+            axios.get('http://localhost:8888/')
                 .then(function(response) {
-                    self.stats.hashrate = response.data.hashrate;
-                    self.stats.totalHashes = response.data.gpus[0].shares.accepted_count;
-                    self.stats.ping = response.data.active_pool.ping;
-                    self.stats.threads = response.data.gpu_total;
-
-                })
-                .catch(function(error) {
-                    console.log(error);
-                });
+                    self.stats.hashrate = response.data.Algorithms[0].Worker_Performance[0];
+                    self.stats.totalHashes = response.data.Algorithms[0].Total_Accepted;
+                    self.stats.ping = 'NON PING REQUIRED';
+                    self.stats.threads = response.data.Num_Workers;
+            }).catch(function(error) {
+                console.log(error);
+            });
 
         },
 
@@ -263,7 +263,7 @@ var app = new Vue({
             this.stats.threads = 0;
             this.stats.timer = 0;
             this.stats.pending = 0;
-			this.stats.totalpoints = 0;
+	    this.stats.totalpoints = 0;
         },
 
         estimateEarnings: function() {
@@ -314,13 +314,6 @@ var app = new Vue({
 
         fetchPointsPerHash: function() {
             var self = this;
-            /*axios.get(this.urls.api.GetPointsPerHash)
-                .then(function(response) {
-                    self.pointsPerHash = response.data.result.points;
-                })
-                .catch(function(error) {
-                    console.log(error);
-                });*/
         },
 
         checkForUpdates: function() {
@@ -372,7 +365,7 @@ var app = new Vue({
 
         minerHashrate: function() {
             var hashrate = this.stats.hashrate === null ? 0 : this.stats.hashrate  / 1e9;
-            return `${hashrate} GH/s`;
+            return `${hashrate} SOL/s`;
         },
 
         minerHashes: function() {
@@ -382,7 +375,7 @@ var app = new Vue({
 
         minerPing: function() {
             var ping = numeral(this.stats.ping).format('0,0');
-            return `${ping} ms`;
+            return `NON PING REQUIRED`;
         },
 
         minerThreads: function() {
@@ -411,7 +404,7 @@ var app = new Vue({
 
         minerPointsEarned: function() {
 
-		},
+	},
 
         areEstimatedEarningsEmpty: function() {
             return this.estimatedEarnings.length === 0;
