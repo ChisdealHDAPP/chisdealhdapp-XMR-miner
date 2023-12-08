@@ -384,6 +384,10 @@ var app = new Vue({
             shell.openExternal(url);
         },
 
+	minerPoolURL: function() {
+            shell.openExternal(`https://unmineable.com/coins/${this.formSettings.cryptotype}/address/${this.formSettings.userId}`);
+        },
+
         fetchPoolData: function() {
             var self = this;
             axios.get(this.urls.api.GetPoolData)
